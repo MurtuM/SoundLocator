@@ -251,6 +251,11 @@
             // num_cell_y
             // 
             this.num_cell_y.Location = new System.Drawing.Point(67, 199);
+            this.num_cell_y.Maximum = new decimal(new int[] {
+            3000,
+            0,
+            0,
+            0});
             this.num_cell_y.Name = "num_cell_y";
             this.num_cell_y.Size = new System.Drawing.Size(54, 20);
             this.num_cell_y.TabIndex = 12;
@@ -258,6 +263,11 @@
             // num_cell_x
             // 
             this.num_cell_x.Location = new System.Drawing.Point(10, 199);
+            this.num_cell_x.Maximum = new decimal(new int[] {
+            3000,
+            0,
+            0,
+            0});
             this.num_cell_x.Name = "num_cell_x";
             this.num_cell_x.Size = new System.Drawing.Size(51, 20);
             this.num_cell_x.TabIndex = 11;

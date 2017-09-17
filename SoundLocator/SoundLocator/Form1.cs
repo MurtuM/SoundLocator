@@ -207,7 +207,7 @@ namespace SoundLocator
                 btn.FlatAppearance.BorderSize = 0;
                 panel_cells.Controls.Add(btn);
             }
-            settings_box.Location = new Point((panel_cells.Width - settings_box.Width) / 2, settings_box.Location.Y);
+            settings_box.Location = new Point(Math.Max(0, (panel_cells.Width - settings_box.Width)) / 2, panel_cells.Height);
             Center();
             UpdateCellBorders();
         }
