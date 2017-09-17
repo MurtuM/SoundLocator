@@ -30,6 +30,8 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.settings_box = new System.Windows.Forms.GroupBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.scroll_opacity = new System.Windows.Forms.HScrollBar();
             this.button_lock = new System.Windows.Forms.Button();
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.button_center = new System.Windows.Forms.Button();
@@ -55,8 +57,6 @@
             this.scroll_min = new System.Windows.Forms.HScrollBar();
             this.combo_sessions = new System.Windows.Forms.ComboBox();
             this.panel_cells = new System.Windows.Forms.FlowLayoutPanel();
-            this.scroll_opacity = new System.Windows.Forms.HScrollBar();
-            this.label7 = new System.Windows.Forms.Label();
             this.settings_box.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.num_cell_spacing)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.num_cell_count)).BeginInit();
@@ -103,6 +103,26 @@
             this.settings_box.TabStop = false;
             this.settings_box.Text = "SoundLocator";
             // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(3, 261);
+            this.label7.Name = "label7";
+            this.label7.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.label7.Size = new System.Drawing.Size(53, 14);
+            this.label7.TabIndex = 26;
+            this.label7.Text = "Opacity";
+            // 
+            // scroll_opacity
+            // 
+            this.scroll_opacity.Location = new System.Drawing.Point(6, 275);
+            this.scroll_opacity.Maximum = 109;
+            this.scroll_opacity.Minimum = 20;
+            this.scroll_opacity.Name = "scroll_opacity";
+            this.scroll_opacity.Size = new System.Drawing.Size(179, 17);
+            this.scroll_opacity.TabIndex = 25;
+            this.scroll_opacity.Value = 20;
+            // 
             // button_lock
             // 
             this.button_lock.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
@@ -112,7 +132,6 @@
             this.button_lock.TabIndex = 24;
             this.button_lock.Text = "Lock";
             this.button_lock.UseVisualStyleBackColor = true;
-            this.button_lock.Click += new System.EventHandler(this.button_lock_Click);
             // 
             // splitter1
             // 
@@ -131,7 +150,6 @@
             this.button_center.TabIndex = 4;
             this.button_center.Text = "Center";
             this.button_center.UseVisualStyleBackColor = true;
-            this.button_center.Click += new System.EventHandler(this.button_center_Click);
             // 
             // label6
             // 
@@ -152,7 +170,6 @@
             this.button_kill.TabIndex = 3;
             this.button_kill.Text = "Exit";
             this.button_kill.UseVisualStyleBackColor = true;
-            this.button_kill.Click += new System.EventHandler(this.button_kill_Click);
             // 
             // num_cell_spacing
             // 
@@ -160,7 +177,6 @@
             this.num_cell_spacing.Name = "num_cell_spacing";
             this.num_cell_spacing.Size = new System.Drawing.Size(51, 20);
             this.num_cell_spacing.TabIndex = 21;
-            this.num_cell_spacing.ValueChanged += new System.EventHandler(this.num_cell_spacing_ValueChanged);
             // 
             // label5
             // 
@@ -179,7 +195,6 @@
             this.combo_cell_align.Name = "combo_cell_align";
             this.combo_cell_align.Size = new System.Drawing.Size(138, 22);
             this.combo_cell_align.TabIndex = 19;
-            this.combo_cell_align.SelectedIndexChanged += new System.EventHandler(this.combo_cell_align_SelectedIndexChanged);
             // 
             // scroll_curvature
             // 
@@ -190,7 +205,6 @@
             this.scroll_curvature.Size = new System.Drawing.Size(138, 17);
             this.scroll_curvature.TabIndex = 18;
             this.scroll_curvature.Value = 1;
-            this.scroll_curvature.Scroll += new System.Windows.Forms.ScrollEventHandler(this.scroll_curvature_Scroll);
             // 
             // label4
             // 
@@ -223,7 +237,6 @@
             this.num_cell_count.Name = "num_cell_count";
             this.num_cell_count.Size = new System.Drawing.Size(111, 20);
             this.num_cell_count.TabIndex = 14;
-            this.num_cell_count.ValueChanged += new System.EventHandler(this.num_cell_count_ValueChanged);
             // 
             // label3
             // 
@@ -241,7 +254,6 @@
             this.num_cell_y.Name = "num_cell_y";
             this.num_cell_y.Size = new System.Drawing.Size(54, 20);
             this.num_cell_y.TabIndex = 12;
-            this.num_cell_y.ValueChanged += new System.EventHandler(this.num_cell_y_ValueChanged);
             // 
             // num_cell_x
             // 
@@ -249,7 +261,6 @@
             this.num_cell_x.Name = "num_cell_x";
             this.num_cell_x.Size = new System.Drawing.Size(51, 20);
             this.num_cell_x.TabIndex = 11;
-            this.num_cell_x.ValueChanged += new System.EventHandler(this.num_cell_x_ValueChanged);
             // 
             // label1
             // 
@@ -268,7 +279,6 @@
             this.scroll_decay.Name = "scroll_decay";
             this.scroll_decay.Size = new System.Drawing.Size(320, 17);
             this.scroll_decay.TabIndex = 7;
-            this.scroll_decay.Scroll += new System.Windows.Forms.ScrollEventHandler(this.scroll_decay_Scroll);
             // 
             // label_max
             // 
@@ -296,7 +306,6 @@
             this.scroll_max.Name = "scroll_max";
             this.scroll_max.Size = new System.Drawing.Size(320, 17);
             this.scroll_max.TabIndex = 4;
-            this.scroll_max.Scroll += new System.Windows.Forms.ScrollEventHandler(this.scroll_max_Scroll);
             // 
             // pbar_peak_r
             // 
@@ -319,7 +328,6 @@
             this.scroll_min.Name = "scroll_min";
             this.scroll_min.Size = new System.Drawing.Size(320, 17);
             this.scroll_min.TabIndex = 1;
-            this.scroll_min.Scroll += new System.Windows.Forms.ScrollEventHandler(this.scroll_min_Scroll);
             // 
             // combo_sessions
             // 
@@ -328,8 +336,6 @@
             this.combo_sessions.Name = "combo_sessions";
             this.combo_sessions.Size = new System.Drawing.Size(319, 22);
             this.combo_sessions.TabIndex = 0;
-            this.combo_sessions.DropDown += new System.EventHandler(this.combo_sessions_DropDown);
-            this.combo_sessions.SelectedIndexChanged += new System.EventHandler(this.combo_sessions_SelectedIndexChanged);
             // 
             // panel_cells
             // 
@@ -341,27 +347,6 @@
             this.panel_cells.Size = new System.Drawing.Size(0, 0);
             this.panel_cells.TabIndex = 1;
             // 
-            // scroll_opacity
-            // 
-            this.scroll_opacity.Location = new System.Drawing.Point(6, 275);
-            this.scroll_opacity.Maximum = 109;
-            this.scroll_opacity.Minimum = 20;
-            this.scroll_opacity.Name = "scroll_opacity";
-            this.scroll_opacity.Size = new System.Drawing.Size(179, 17);
-            this.scroll_opacity.TabIndex = 25;
-            this.scroll_opacity.Value = 20;
-            this.scroll_opacity.Scroll += new System.Windows.Forms.ScrollEventHandler(this.hScrollBar1_Scroll);
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(3, 261);
-            this.label7.Name = "label7";
-            this.label7.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.label7.Size = new System.Drawing.Size(53, 14);
-            this.label7.TabIndex = 26;
-            this.label7.Text = "Opacity";
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 14F);
@@ -369,7 +354,7 @@
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackColor = System.Drawing.Color.Maroon;
-            this.ClientSize = new System.Drawing.Size(615, 545);
+            this.ClientSize = new System.Drawing.Size(385, 371);
             this.Controls.Add(this.panel_cells);
             this.Controls.Add(this.settings_box);
             this.Font = new System.Drawing.Font("Georgia", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -380,9 +365,6 @@
             this.Text = "SoundLocator";
             this.TopMost = true;
             this.TransparencyKey = System.Drawing.Color.Maroon;
-            this.Activated += new System.EventHandler(this.Form1_Activated);
-            this.Deactivate += new System.EventHandler(this.Form1_Deactivate);
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.settings_box.ResumeLayout(false);
             this.settings_box.PerformLayout();

@@ -8,22 +8,13 @@ using System.Runtime.InteropServices;
 
 namespace SoundLocator
 {
-
     public partial class Form1 : Form
     {
-        public const int WM_NCLBUTTONDOWN = 0xA1;
-        public const int HTCAPTION = 0x2;
-
-        [DllImport("User32.dll")]
-        public static extern bool ReleaseCapture();
-
-        [DllImport("User32.dll")]
-        public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
-
         MMDevice m_device;
         Timer m_timer = new Timer();
         int m_session = 0;
         float[] m_cells;
+        int m_fancy_effect = -1;
         public bool m_pure_overlay = false;
 
         public class Settings
@@ -64,18 +55,7 @@ namespace SoundLocator
 
             var serializer = new XmlSerializer(m_settings.GetType());
             using (var reader = XmlReader.Create(SettingsPath))
-                m_settings = (Settings) serializer.Deserialize(reader);
-
-            scroll_decay.Value = (int) ((m_settings.m_decay / 2.0f) * 109);
-            scroll_min.Value = (int) (m_settings.m_interval_min * 109);
-            scroll_max.Value = (int) (m_settings.m_interval_max * 109);
-            num_cell_count.Value = m_settings.m_num_cells;
-            num_cell_x.Value = m_settings.m_cell_size.X;
-            num_cell_y.Value = m_settings.m_cell_size.Y;
-            scroll_curvature.Value = (int) (m_settings.m_curvature * 9.0f);
-            num_cell_spacing.Value = m_settings.m_cell_spacing;
-            scroll_opacity.Value = (int) (m_settings.m_opacity * 109);
-            Opacity = m_settings.m_opacity;
+                m_settings = (Settings)serializer.Deserialize(reader);
         }
 
         public Form1()
@@ -90,14 +70,26 @@ namespace SoundLocator
             UpdateSessionList();
 
             m_timer.Tick += new EventHandler(Update);
-            m_timer.Interval = 16;
+            m_timer.Interval = 8;
             m_timer.Start();
 
             settings_box.MouseDown += (a, b) => { MouseDownMove(a, b); };
 
             LoadSettings();
 
+            scroll_decay.Value = (int)((m_settings.m_decay / 2.0f) * 109);
+            scroll_min.Value = (int)(m_settings.m_interval_min * 109);
+            scroll_max.Value = (int)(m_settings.m_interval_max * 109);
+            num_cell_count.Value = m_settings.m_num_cells;
+            num_cell_x.Value = m_settings.m_cell_size.X;
+            num_cell_y.Value = m_settings.m_cell_size.Y;
+            scroll_curvature.Value = (int)(m_settings.m_curvature * 9.0f);
+            num_cell_spacing.Value = m_settings.m_cell_spacing;
+            scroll_opacity.Value = (int)(m_settings.m_opacity * 109);
+
+            Opacity = m_settings.m_opacity;
             Location = m_settings.m_location;
+
             InitCells();
             ToggleOverlay(false);
 
@@ -124,6 +116,72 @@ namespace SoundLocator
             combo_cell_align.Items.Add("Center");
             combo_cell_align.Items.Add("Bottom");
             combo_cell_align.SelectedIndex = m_settings.m_cell_align;
+
+            InitUICallbacks();
+        }
+
+        private void InitUICallbacks()
+        {
+            scroll_min.Scroll += (s, e) => {
+                scroll_max.Value = Math.Max(scroll_max.Value, scroll_min.Value);
+                m_settings.m_interval_min = scroll_min.Value / 100.0f;
+                m_settings.m_interval_max = scroll_max.Value / 100.0f;
+            };
+
+            scroll_max.Scroll += (s, e) => {
+                scroll_min.Value = Math.Min(scroll_max.Value, scroll_min.Value);
+                m_settings.m_interval_min = scroll_min.Value / 100.0f;
+                m_settings.m_interval_max = scroll_max.Value / 100.0f;
+                SaveSettings();
+            };
+
+            scroll_decay.Scroll += (s, e) => { m_settings.m_decay = (scroll_decay.Value / 100.0f) * 2.0f; };
+
+            num_cell_x.ValueChanged += (s, e) => { m_settings.m_cell_size.X = (int)num_cell_x.Value; InitCells(); };
+            num_cell_y.ValueChanged += (s, e) => { m_settings.m_cell_size.Y = (int)num_cell_y.Value; InitCells(); };
+            num_cell_count.ValueChanged += (s, e) => { m_settings.m_num_cells = (int)num_cell_count.Value; InitCells(); };
+
+            button_center.Click += (s, e) => { Center(); };
+            button_lock.Click += (s, e) => { m_pure_overlay = true; Close(); };
+            button_kill.Click += (ab, cd) => {
+                SaveSettings();
+                m_timer.Stop();
+                Application.Exit();
+            };
+
+            scroll_curvature.Scroll += (s, e) => {
+                m_settings.m_curvature = scroll_curvature.Value / 10.0f;
+                InitCells();
+            };
+
+            combo_cell_align.SelectedIndexChanged += (s, e) => {
+                m_settings.m_cell_align = combo_cell_align.SelectedIndex;
+                InitCells();
+            };
+
+            num_cell_spacing.ValueChanged += (s, e) => {
+                m_settings.m_cell_spacing = (int) num_cell_spacing.Value;
+                InitCells();
+            };
+
+            scroll_opacity.Scroll += (s, e) => {
+                m_settings.m_opacity = scroll_opacity.Value / 100.0f;
+                Opacity = m_settings.m_opacity;
+            };
+
+            combo_sessions.DropDown += (s, e) => { UpdateSessionList(); };
+            combo_sessions.SelectedIndexChanged += (s, e) => {
+                m_session = combo_sessions.SelectedIndex;
+                m_settings.m_last_session = GetSessionName(m_session);
+            };
+
+            Activated += (s, e) => { ToggleOverlay(false); };
+            Deactivate += (s, e) => { ToggleOverlay(true); };
+            FormClosing += (s, e) => {
+                m_settings.m_location = Location;
+                m_timer.Stop();
+                SaveSettings();
+            };
         }
 
         private void InitCells()
@@ -138,6 +196,7 @@ namespace SoundLocator
                 var btn = new Button();
                 btn.Size = new Size(m_settings.m_cell_size.X, height);
                 btn.FlatStyle = FlatStyle.Flat;
+                btn.FlatAppearance.BorderColor = Color.White;
                 int pad_top = 0;
                 if (m_settings.m_cell_align == 1)
                     pad_top = (m_settings.m_cell_size.Y - btn.Height) / 2;
@@ -147,16 +206,15 @@ namespace SoundLocator
                 btn.Enabled = false;
                 btn.FlatAppearance.BorderSize = 0;
                 panel_cells.Controls.Add(btn);
-                
-                m_cells[i] = 1.0f;
             }
-            settings_box.Location = new Point((Width - settings_box.Width) / 2, settings_box.Location.Y);
+            settings_box.Location = new Point((panel_cells.Width - settings_box.Width) / 2, settings_box.Location.Y);
             Center();
+            UpdateCellBorders();
         }
 
         public void Update(Object myObject, EventArgs myEventArgs)
         {
-            var dt = 0.016f;
+            var dt = 0.008f;
 
             if (m_session >= 0)
             {
@@ -197,6 +255,14 @@ namespace SoundLocator
                 m_cells[i] = Math.Max(0.0f, m_cells[i] - dt / m_settings.m_decay);
                 (panel_cells.Controls[i] as Button).BackColor = Color.FromArgb((int)(m_cells[i] * 255), 255, 255, 255);
             }
+
+            if (m_fancy_effect > -1)
+            {
+                if (++m_fancy_effect < m_cells.Length)
+                    m_cells[m_fancy_effect] = m_cells[m_cells.Length - 1 - m_fancy_effect] = 1.0f;
+                else
+                    m_fancy_effect = -1;
+            }
         }
 
         void UpdateSessionList()
@@ -229,22 +295,20 @@ namespace SoundLocator
             return session_name;
         }
 
-        private void combo_sessions_DropDown(object sender, EventArgs e)
+        private void UpdateCellBorders()
         {
-            UpdateSessionList();
-        }
-
-        private void combo_sessions_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            m_session = combo_sessions.SelectedIndex;
-            m_settings.m_last_session = GetSessionName(m_session);
+            foreach (Button c in panel_cells.Controls)
+                c.FlatAppearance.BorderSize = !settings_box.Visible ? 0 : 1;
         }
 
         private void ToggleOverlay(bool overlay)
         {
+            if (overlay != m_pure_overlay)
+                m_fancy_effect = 0;
             if (m_pure_overlay)
                 overlay = true;
             settings_box.Visible = button_kill.Visible = button_center.Visible = !overlay;
+            UpdateCellBorders();
         }
 
         private void Center()
@@ -252,103 +316,14 @@ namespace SoundLocator
             Location = new Point((Screen.FromHandle(Handle).Bounds.Width - panel_cells.Width) / 2, Location.Y);
         }
 
-        private void scroll_min_Scroll(object sender, ScrollEventArgs e)
-        {
-            scroll_max.Value = Math.Max(scroll_max.Value, scroll_min.Value);
-            m_settings.m_interval_min = scroll_min.Value / 100.0f;
-            m_settings.m_interval_max = scroll_max.Value / 100.0f;
-        }
+        public const int WM_NCLBUTTONDOWN = 0xA1;
+        public const int HTCAPTION = 0x2;
 
-        private void scroll_max_Scroll(object sender, ScrollEventArgs e)
-        {
-            scroll_min.Value = Math.Min(scroll_max.Value, scroll_min.Value);
-            m_settings.m_interval_min = scroll_min.Value / 100.0f;
-            m_settings.m_interval_max = scroll_max.Value / 100.0f;
-            SaveSettings();
-        }
+        [DllImport("User32.dll")]
+        public static extern bool ReleaseCapture();
 
-        private void scroll_decay_Scroll(object sender, ScrollEventArgs e)
-        {
-            m_settings.m_decay = (scroll_decay.Value / 100.0f) * 2.0f;
-            ;
-        }
-
-        //// Movable
-        //protected override void WndProc(ref Message m)
-        //{
-        //    base.WndProc(ref m);
-        //    if (m.Msg == WM_NCHITTEST)
-        //        m.Result = (IntPtr)(HT_CAPTION);
-        //}
-        //private const int WM_NCHITTEST = 0x84;
-        //private const int HT_CLIENT = 0x1;
-        //private const int HT_CAPTION = 0x2;
-
-        //// Transparent
-        //protected override void WndProc(ref Message m)
-        //{
-        //    const int WM_NCHITTEST = 0x0084;
-        //    const int HTTRANSPARENT = (-1);
-        //    if (m.Msg == WM_NCHITTEST)
-        //        m.Result = (IntPtr)HTTRANSPARENT;
-        //    else
-        //        base.WndProc(ref m);
-        //}
-
-        private void button_kill_Click(object sender, EventArgs e)
-        {
-            SaveSettings();
-            m_timer.Stop();
-            Application.Exit();
-        }
-
-        private void num_cell_x_ValueChanged(object sender, EventArgs e)
-        {
-            m_settings.m_cell_size.X = (int) num_cell_x.Value;
-            InitCells();
-        }
-
-        private void num_cell_y_ValueChanged(object sender, EventArgs e)
-        {
-            m_settings.m_cell_size.Y = (int) num_cell_y.Value;
-            InitCells();
-        }
-
-        private void num_cell_count_ValueChanged(object sender, EventArgs e)
-        {
-            m_settings.m_num_cells = (int) num_cell_count.Value;
-            InitCells();
-        }
-
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            m_settings.m_location = Location;
-            m_timer.Stop();
-            SaveSettings();
-        }
-        
-        private void button_center_Click(object sender, EventArgs e)
-        {
-            Center();
-        }
-
-        private void scroll_curvature_Scroll(object sender, ScrollEventArgs e)
-        {
-            m_settings.m_curvature = scroll_curvature.Value / 10.0f;
-            InitCells();
-        }
-
-        private void combo_cell_align_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            m_settings.m_cell_align = combo_cell_align.SelectedIndex;
-            InitCells();
-        }
-
-        private void num_cell_spacing_ValueChanged(object sender, EventArgs e)
-        {
-            m_settings.m_cell_spacing = (int) num_cell_spacing.Value;
-            InitCells();
-        }
+        [DllImport("User32.dll")]
+        public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
 
         private void MouseDownMove(object sender, MouseEventArgs e)
         {
@@ -357,28 +332,6 @@ namespace SoundLocator
                 ReleaseCapture();
                 SendMessage(Handle, WM_NCLBUTTONDOWN, HTCAPTION, 0);
             }
-        }
-
-        private void Form1_Activated(object sender, EventArgs e)
-        {
-            ToggleOverlay(false);
-        }
-
-        private void Form1_Deactivate(object sender, EventArgs e)
-        {
-            ToggleOverlay(true);
-        }
-
-        private void button_lock_Click(object sender, EventArgs e)
-        {
-            m_pure_overlay = true;
-            Close();
-        }
-
-        private void hScrollBar1_Scroll(object sender, ScrollEventArgs e)
-        {
-            m_settings.m_opacity = scroll_opacity.Value / 100.0f;
-            Opacity = m_settings.m_opacity;
         }
     }
 }
